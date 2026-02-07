@@ -1,0 +1,65 @@
+"use client";
+
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+} from "recharts";
+import { skillDistribution } from "@/lib/mock-data";
+
+export default function SkillDistribution() {
+  return (
+    <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+      <h3 className="text-base font-bold text-gray-900 mb-4">
+        スキル利用分布
+      </h3>
+
+      <div className="flex items-center gap-6">
+        <div className="w-48 h-48 flex-shrink-0">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={skillDistribution}
+                cx="50%"
+                cy="50%"
+                innerRadius={50}
+                outerRadius={80}
+                paddingAngle={2}
+                dataKey="value"
+              >
+                {skillDistribution.map((entry, index) => (
+                  <Cell key={index} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip
+                contentStyle={{
+                  borderRadius: "8px",
+                  border: "1px solid #e5e7eb",
+                  fontSize: "12px",
+                }}
+                formatter={(value) => [`${value}%`, ""]}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="flex flex-col gap-2 flex-1">
+          {skillDistribution.map((item) => (
+            <div key={item.name} className="flex items-center gap-2">
+              <div
+                className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                style={{ backgroundColor: item.color }}
+              />
+              <span className="text-xs text-gray-600 flex-1">{item.name}</span>
+              <span className="text-xs font-medium text-gray-900">
+                {item.value}%
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
