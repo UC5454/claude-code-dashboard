@@ -8,20 +8,32 @@ import {
   Tooltip,
 } from "recharts";
 import { skillDistribution } from "@/lib/mock-data";
+import type { SkillDistribution as SkillDistributionType } from "@/types";
 
-export default function SkillDistribution() {
+interface SkillDistributionProps {
+  data?: SkillDistributionType[];
+  isLoading?: boolean;
+  error?: string;
+}
+
+export default function SkillDistribution({ data, isLoading, error }: SkillDistributionProps) {
+  const chartData = data ?? skillDistribution;
+
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
       <h3 className="text-base font-bold text-gray-900 mb-4">
         スキル利用分布
       </h3>
 
+      {isLoading && <p className="text-sm text-gray-500 mb-3">分布を読み込み中...</p>}
+      {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
+
       <div className="flex items-center gap-6">
         <div className="w-48 h-48 flex-shrink-0">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
-                data={skillDistribution}
+                data={chartData}
                 cx="50%"
                 cy="50%"
                 innerRadius={50}
@@ -29,7 +41,7 @@ export default function SkillDistribution() {
                 paddingAngle={2}
                 dataKey="value"
               >
-                {skillDistribution.map((entry, index) => (
+                {chartData.map((entry, index) => (
                   <Cell key={index} fill={entry.color} />
                 ))}
               </Pie>
@@ -46,7 +58,7 @@ export default function SkillDistribution() {
         </div>
 
         <div className="flex flex-col gap-2 flex-1">
-          {skillDistribution.map((item) => (
+          {chartData.map((item) => (
             <div key={item.name} className="flex items-center gap-2">
               <div
                 className="w-2.5 h-2.5 rounded-full flex-shrink-0"

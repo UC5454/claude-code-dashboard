@@ -5,7 +5,9 @@ import Header from "@/components/layout/Header";
 import UsageTrend from "@/components/tools/UsageTrend";
 import SkillDistribution from "@/components/tools/SkillDistribution";
 import SkillBarChart from "@/components/tools/SkillBarChart";
-import type { ToolSubTab } from "@/types";
+import { useToolAnalysis } from "@/lib/api";
+import { usePeriod } from "@/hooks/usePeriod";
+import type { ToolSubTab, ToolCategory } from "@/types";
 
 const toolSubTabs: { key: ToolSubTab; label: string }[] = [
   { key: "skill", label: "スキル" },
@@ -14,8 +16,24 @@ const toolSubTabs: { key: ToolSubTab; label: string }[] = [
   { key: "command", label: "スラッシュコマンド" },
 ];
 
+function tabToCategory(tab: ToolSubTab): ToolCategory {
+  if (tab === "skill") return "skills";
+  if (tab === "subagent") return "subagents";
+  if (tab === "mcp") return "mcp";
+  return "commands";
+}
+
 export default function ToolsAnalyticsPage() {
   const [activeTab, setActiveTab] = useState<ToolSubTab>("skill");
+  const { period } = usePeriod("7D");
+
+  const category = tabToCategory(activeTab);
+
+  const analysis = useToolAnalysis(category, period);
+
+  const trend = analysis.data?.trend;
+  const distribution = analysis.data?.distribution;
+  const ranking = analysis.data?.ranking.map((item) => ({ name: item.name, count: item.count })) ?? undefined;
 
   return (
     <div className="min-h-screen">
@@ -37,11 +55,11 @@ export default function ToolsAnalyticsPage() {
           ))}
         </div>
 
-        <UsageTrend />
+        <UsageTrend data={trend} isLoading={analysis.isLoading} error={analysis.error?.message} />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-          <SkillDistribution />
-          <SkillBarChart />
+          <SkillDistribution data={distribution} isLoading={analysis.isLoading} error={analysis.error?.message} />
+          <SkillBarChart data={ranking} isLoading={analysis.isLoading} error={analysis.error?.message} />
         </div>
       </main>
     </div>

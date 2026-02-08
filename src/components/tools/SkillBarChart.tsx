@@ -10,17 +10,29 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { skillBarData } from "@/lib/mock-data";
+import type { SkillBarData } from "@/types";
 
-export default function SkillBarChart() {
+interface SkillBarChartProps {
+  data?: SkillBarData[];
+  isLoading?: boolean;
+  error?: string;
+}
+
+export default function SkillBarChart({ data, isLoading, error }: SkillBarChartProps) {
+  const chartData = data ?? skillBarData;
+
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
       <h3 className="text-base font-bold text-gray-900 mb-4">
         スキル別利用数
       </h3>
 
+      {isLoading && <p className="text-sm text-gray-500 mb-3">ランキングを読み込み中...</p>}
+      {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
+
       <div className="h-72">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={skillBarData} layout="vertical" barSize={16}>
+          <BarChart data={chartData} layout="vertical" barSize={16}>
             <CartesianGrid
               strokeDasharray="3 3"
               stroke="#f0f0f0"
