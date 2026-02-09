@@ -163,8 +163,17 @@ HOOKS_JSON=$(cat <<'JSON'
 JSON
 )
 
+LOGGER_CMD="~/.claude-code-dashboard/scripts/cc-logger.sh"
 TMP_FILE=$(mktemp)
-jq -s '.[0] * .[1]' "$SETTINGS_FILE" <(echo "$HOOKS_JSON") > "$TMP_FILE"
+jq --argjson new_hooks "$HOOKS_JSON" --arg logger_cmd "$LOGGER_CMD" '
+  .hooks //= {} |
+  reduce ($new_hooks.hooks | to_entries[]) as $e (.;
+    .hooks[$e.key] = (
+      [(.hooks[$e.key] // [])[] | select(.hooks[0].command != $logger_cmd)] +
+      $e.value
+    )
+  )
+' "$SETTINGS_FILE" > "$TMP_FILE"
 mv "$TMP_FILE" "$SETTINGS_FILE"
 
 GIT_NAME=$(git config user.name 2>/dev/null || echo "unknown")
