@@ -1,8 +1,8 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
 import type { Period } from "@/types";
+import { usePeriod } from "@/hooks/usePeriod";
 
 const tabs = [
   { label: "ダッシュボード", href: "/" },
@@ -16,7 +16,23 @@ const periods: Period[] = ["1D", "7D", "30D", "All"];
 export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
-  const [activePeriod, setActivePeriod] = useState<Period>("7D");
+  const { period: activePeriod, setPeriod: setActivePeriod } = usePeriod("7D");
+
+  const updatePeriod = (period: Period) => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    params.set("period", period);
+    setActivePeriod(period);
+    router.push(`${pathname}?${params.toString()}`);
+    window.dispatchEvent(new CustomEvent("periodchange", { detail: period }));
+  };
+
+  const pushTab = (href: string) => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const query = params.toString();
+    router.push(query ? `${href}?${query}` : href);
+  };
 
   return (
     <header className="bg-white border-b border-gray-200">
@@ -35,7 +51,7 @@ export default function Header() {
               {periods.map((period) => (
                 <button
                   key={period}
-                  onClick={() => setActivePeriod(period)}
+                  onClick={() => updatePeriod(period)}
                   className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
                     activePeriod === period
                       ? "bg-white text-gray-900 shadow-sm font-medium"
@@ -65,7 +81,7 @@ export default function Header() {
             return (
               <button
                 key={tab.href}
-                onClick={() => router.push(tab.href)}
+                onClick={() => pushTab(tab.href)}
                 className={`px-4 py-3 text-sm border-b-2 transition-colors ${
                   isActive
                     ? "border-gray-900 text-gray-900 font-semibold"

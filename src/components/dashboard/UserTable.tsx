@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ArrowUpDown,
   Trophy,
@@ -15,12 +15,24 @@ type SortKey = keyof Pick<
   "skill" | "subagent" | "mcp" | "command" | "message" | "total"
 >;
 
-export default function UserTable() {
+interface UserTableProps {
+  rows?: UserRow[];
+  isLoading?: boolean;
+  error?: string;
+}
+
+export default function UserTable({ rows, isLoading, error }: UserTableProps) {
   const [sortKey, setSortKey] = useState<SortKey>("total");
   const [sortAsc, setSortAsc] = useState(false);
 
-  const sorted = [...userData].sort((a, b) =>
-    sortAsc ? a[sortKey] - b[sortKey] : b[sortKey] - a[sortKey]
+  const sourceRows = rows ?? userData;
+
+  const sorted = useMemo(
+    () =>
+      [...sourceRows].sort((a, b) =>
+        sortAsc ? a[sortKey] - b[sortKey] : b[sortKey] - a[sortKey]
+      ),
+    [sourceRows, sortAsc, sortKey],
   );
 
   const handleSort = (key: SortKey) => {
@@ -66,6 +78,9 @@ export default function UserTable() {
         </a>
       </div>
 
+      {isLoading && <p className="text-sm text-gray-500 mb-3">ユーザー集計を読み込み中...</p>}
+      {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
+
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
         <table className="w-full">
           <thead>
@@ -93,7 +108,7 @@ export default function UserTable() {
           <tbody>
             {sorted.map((user, i) => (
               <tr
-                key={user.name}
+                key={`${user.name}-${i}`}
                 className={`border-b border-gray-50 hover:bg-gray-50 transition-colors ${
                   i === 0 ? "bg-yellow-50/50" : ""
                 }`}
@@ -113,24 +128,12 @@ export default function UserTable() {
                     </p>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-right text-sm text-gray-700">
-                  {user.skill}
-                </td>
-                <td className="px-4 py-3 text-right text-sm text-gray-700">
-                  {user.subagent}
-                </td>
-                <td className="px-4 py-3 text-right text-sm text-gray-700">
-                  {user.mcp}
-                </td>
-                <td className="px-4 py-3 text-right text-sm text-gray-700">
-                  {user.command}
-                </td>
-                <td className="px-4 py-3 text-right text-sm text-gray-700">
-                  {user.message}
-                </td>
-                <td className="px-4 py-3 text-right text-sm font-bold text-gray-900">
-                  {user.total.toLocaleString()}
-                </td>
+                <td className="px-4 py-3 text-right text-sm text-gray-700">{user.skill}</td>
+                <td className="px-4 py-3 text-right text-sm text-gray-700">{user.subagent}</td>
+                <td className="px-4 py-3 text-right text-sm text-gray-700">{user.mcp}</td>
+                <td className="px-4 py-3 text-right text-sm text-gray-700">{user.command}</td>
+                <td className="px-4 py-3 text-right text-sm text-gray-700">{user.message}</td>
+                <td className="px-4 py-3 text-right text-sm font-bold text-gray-900">{user.total.toLocaleString()}</td>
               </tr>
             ))}
           </tbody>
