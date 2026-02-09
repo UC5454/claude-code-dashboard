@@ -36,7 +36,7 @@ function useFetchJSON<T>(url: string, refreshInterval?: number): FetchState<T> {
 
     const run = async () => {
       try {
-        if (mounted) setState((prev) => ({ ...prev, isLoading: true }));
+        if (mounted) setState((prev) => ({ data: prev.data, isLoading: true }));
         const response = await fetch(url, { cache: "no-store" });
         if (!response.ok) {
           throw new Error(`Request failed: ${response.status}`);
