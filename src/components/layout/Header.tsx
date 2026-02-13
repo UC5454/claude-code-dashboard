@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
+import { signOut, useSession } from "next-auth/react";
 import type { Period } from "@/types";
 import { usePeriod } from "@/hooks/usePeriod";
 
@@ -16,6 +17,7 @@ const periods: Period[] = ["1D", "7D", "30D", "All"];
 export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
+  const { data: session } = useSession();
   const { period: activePeriod, setPeriod: setActivePeriod } = usePeriod("7D");
 
   const updatePeriod = (period: Period) => {
@@ -62,13 +64,17 @@ export default function Header() {
                 </button>
               ))}
             </div>
-            <select className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-gray-700">
-              <option>期間</option>
-              <option>今日</option>
-              <option>今週</option>
-              <option>今月</option>
-              <option>カスタム</option>
-            </select>
+            {session?.user && (
+              <div className="flex items-center gap-2 ml-4 pl-4 border-l border-gray-200">
+                <span className="text-sm text-gray-600">{session.user.name ?? session.user.email}</span>
+                <button
+                  onClick={() => signOut({ callbackUrl: "/login" })}
+                  className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  ログアウト
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
