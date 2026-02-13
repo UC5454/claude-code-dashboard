@@ -28,7 +28,7 @@ function parseRange(request: NextRequest) {
 async function resolveName(uid: string): Promise<string> {
   if (process.env.VERCEL) {
     const profiles = await fetchUserProfiles();
-    return profiles[uid] ?? uid;
+    return profiles[uid]?.git_name ?? uid;
   }
 
   const profilePath = path.join(os.homedir(), ".claude-code-dashboard", "user-profile.json");

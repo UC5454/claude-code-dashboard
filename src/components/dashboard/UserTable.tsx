@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import {
   ArrowUpDown,
   Trophy,
@@ -122,9 +123,12 @@ export default function UserTable({ rows, isLoading, error }: UserTableProps) {
                 </td>
                 <td className="px-4 py-3">
                   <div>
-                    <span className="text-sm font-medium text-gray-900">
+                    <Link
+                      href={`/users/${encodeURIComponent(user.uid)}`}
+                      className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                    >
                       {user.name}
-                    </span>
+                    </Link>
                     <p className="text-xs text-gray-400 mt-0.5">
                       {user.lastActive}
                     </p>

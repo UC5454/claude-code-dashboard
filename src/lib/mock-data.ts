@@ -103,6 +103,7 @@ export const insightsData: InsightCard[] = [
 export const userData: UserRow[] = [
   {
     rank: 1,
+    uid: "mock-001",
     name: "田中 太郎",
     lastActive: "1時間前",
     skill: 14,
@@ -114,6 +115,7 @@ export const userData: UserRow[] = [
   },
   {
     rank: 2,
+    uid: "mock-002",
     name: "佐藤 花子",
     lastActive: "2時間前",
     skill: 11,
@@ -125,6 +127,7 @@ export const userData: UserRow[] = [
   },
   {
     rank: 3,
+    uid: "mock-003",
     name: "鈴木 一郎",
     lastActive: "3時間前",
     skill: 9,
@@ -136,6 +139,7 @@ export const userData: UserRow[] = [
   },
   {
     rank: 4,
+    uid: "mock-004",
     name: "高橋 美咲",
     lastActive: "1時間前",
     skill: 7,
@@ -147,6 +151,7 @@ export const userData: UserRow[] = [
   },
   {
     rank: 5,
+    uid: "mock-005",
     name: "伊藤 健太",
     lastActive: "5時間前",
     skill: 6,
@@ -158,6 +163,7 @@ export const userData: UserRow[] = [
   },
   {
     rank: 6,
+    uid: "mock-006",
     name: "渡辺 さくら",
     lastActive: "4時間前",
     skill: 5,
@@ -169,6 +175,7 @@ export const userData: UserRow[] = [
   },
   {
     rank: 7,
+    uid: "mock-007",
     name: "山本 大輔",
     lastActive: "6時間前",
     skill: 3,
@@ -180,6 +187,7 @@ export const userData: UserRow[] = [
   },
   {
     rank: 8,
+    uid: "mock-008",
     name: "中村 愛",
     lastActive: "8時間前",
     skill: 1,

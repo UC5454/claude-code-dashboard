@@ -6,6 +6,7 @@ import type {
   ToolCategory,
   TrendDataPoint,
   UserSummary,
+  UserDetail,
   SkillBarData,
   SkillDistribution,
 } from "@/types";
@@ -280,5 +281,106 @@ export function aggregateByToolCategory(events: BaseEvent[], category: ToolCateg
     trend: generateTrend(selected, "hour"),
     distribution,
     ranking,
+  };
+}
+
+export function aggregateUserDetail(events: BaseEvent[], uid: string): Omit<UserDetail, "name"> {
+  const userEvents = events.filter((e) => e.uid === uid);
+
+  // Projects breakdown
+  const projectCounter = new Map<string, number>();
+  for (const e of userEvents) {
+    const proj = String(e.project || "unknown");
+    projectCounter.set(proj, (projectCounter.get(proj) ?? 0) + 1);
+  }
+  const projects = [...projectCounter.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([name, count]) => ({ name, count }));
+
+  // Tool category breakdown
+  const toolCounter = new Map<string, number>();
+  for (const e of userEvents) {
+    if (e.event === "tool_use") {
+      const cat = String(e.category || "other");
+      toolCounter.set(cat, (toolCounter.get(cat) ?? 0) + 1);
+    }
+  }
+  const palette = ["#3b82f6", "#8b5cf6", "#06b6d4", "#f59e0b", "#10b981", "#ef4444", "#ec4899", "#d1d5db"];
+  const toolTotal = [...toolCounter.values()].reduce((a, b) => a + b, 0);
+  const toolCategories = [...toolCounter.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, count], i) => ({
+      name,
+      value: toolTotal === 0 ? 0 : Number(((count / toolTotal) * 100).toFixed(1)),
+      color: palette[i % palette.length],
+    }));
+
+  // Hourly activity heatmap (0-23)
+  const hourly = new Array(24).fill(0);
+  for (const e of userEvents) {
+    const h = new Date(e.ts).getUTCHours();
+    if (h >= 0 && h < 24) hourly[h] += 1;
+  }
+  // Convert to JST (+9)
+  const hourlyJST = new Array(24).fill(0);
+  for (let i = 0; i < 24; i++) {
+    hourlyJST[(i + 9) % 24] = hourly[i];
+  }
+
+  // Daily trend
+  const dailyTrend = generateTrend(userEvents, "day");
+
+  // Recent sessions
+  const sessionMap = new Map<string, { start: string; events: number; project: string }>();
+  for (const e of userEvents) {
+    const existing = sessionMap.get(e.sid);
+    if (!existing) {
+      sessionMap.set(e.sid, { start: e.ts, events: 1, project: String(e.project || "unknown") });
+    } else {
+      existing.events += 1;
+      if (new Date(e.ts) < new Date(existing.start)) existing.start = e.ts;
+    }
+  }
+  const recentSessions = [...sessionMap.entries()]
+    .sort((a, b) => new Date(b[1].start).getTime() - new Date(a[1].start).getTime())
+    .slice(0, 10)
+    .map(([sid, data]) => ({ sid, start: data.start, events: data.events, project: data.project }));
+
+  // Top tools (specific tool names)
+  const toolNameCounter = new Map<string, number>();
+  for (const e of userEvents) {
+    if (e.event === "tool_use") {
+      const tool = String(e.tool || e.detail || "unknown");
+      toolNameCounter.set(tool, (toolNameCounter.get(tool) ?? 0) + 1);
+    }
+  }
+  const topTools = [...toolNameCounter.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([name, count]) => ({ name, count }));
+
+  // Basic stats
+  const totalEvents = userEvents.length;
+  const sessions = new Set(userEvents.map((e) => e.sid)).size;
+  const firstSeen = userEvents.length > 0
+    ? userEvents.reduce((min, e) => (new Date(e.ts) < new Date(min) ? e.ts : min), userEvents[0].ts)
+    : "";
+  const lastSeen = userEvents.length > 0
+    ? userEvents.reduce((max, e) => (new Date(e.ts) > new Date(max) ? e.ts : max), userEvents[0].ts)
+    : "";
+
+  return {
+    uid,
+    totalEvents,
+    sessions,
+    firstSeen,
+    lastSeen,
+    projects,
+    toolCategories,
+    hourlyActivity: hourlyJST,
+    dailyTrend,
+    recentSessions,
+    topTools,
   };
 }

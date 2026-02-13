@@ -21,6 +21,7 @@ export interface InsightCard {
 
 export interface UserRow {
   rank: number;
+  uid: string;
   name: string;
   lastActive: string;
   skill: number;
@@ -100,6 +101,21 @@ export interface InsightsResponse {
   generatedAt: string;
   insights: InsightCard[];
   cached: boolean;
+}
+
+export interface UserDetail {
+  uid: string;
+  name: string;
+  totalEvents: number;
+  sessions: number;
+  firstSeen: string;
+  lastSeen: string;
+  projects: SkillBarData[];
+  toolCategories: SkillDistribution[];
+  hourlyActivity: number[];
+  dailyTrend: TrendDataPoint[];
+  recentSessions: { sid: string; start: string; events: number; project: string }[];
+  topTools: SkillBarData[];
 }
 
 export type Period = "1D" | "7D" | "30D" | "All";

@@ -19,6 +19,7 @@ export default function UsersPage() {
   const rows: UserRow[] =
     users.data?.map((user, index) => ({
       rank: index + 1,
+      uid: user.uid,
       name: user.name,
       lastActive: formatLastActive(user.lastActive),
       skill: user.skill,

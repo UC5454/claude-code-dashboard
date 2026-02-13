@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import readline from "node:readline";
 import type { BaseEvent } from "@/types";
-import { fetchLogFile } from "@/lib/supabase";
+import { fetchAllUsersLogFile } from "@/lib/supabase";
 
 export async function parseJSONL(filePath: string): Promise<BaseEvent[]> {
   if (!fs.existsSync(filePath)) return [];
@@ -29,7 +29,7 @@ export async function parseJSONL(filePath: string): Promise<BaseEvent[]> {
   return events;
 }
 
-function parseJSONLText(text: string): BaseEvent[] {
+export function parseJSONLText(text: string): BaseEvent[] {
   const events: BaseEvent[] = [];
   for (const line of text.split("\n")) {
     if (!line.trim()) continue;
@@ -77,7 +77,13 @@ async function loadEventsFromStorage(startDate: Date, endDate: Date): Promise<Ba
   while (cursor <= end) {
     const dateKey = toDateKey(cursor);
     fetches.push(
-      fetchLogFile(dateKey).then((text) => (text ? parseJSONLText(text) : [])),
+      fetchAllUsersLogFile(dateKey).then((texts) => {
+        const all: BaseEvent[] = [];
+        for (const text of texts) {
+          all.push(...parseJSONLText(text));
+        }
+        return all;
+      }),
     );
     cursor.setUTCDate(cursor.getUTCDate() + 1);
   }

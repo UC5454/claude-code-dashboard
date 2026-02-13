@@ -7,6 +7,7 @@ import type {
   Period,
   ToolAnalysis,
   ToolCategory,
+  UserDetail,
   UserSummary,
 } from "@/types";
 
@@ -90,6 +91,13 @@ export function useToolAnalysis(category: ToolCategory, period: Period): FetchSt
   const { start, end } = useMemo(() => periodToDateRange(period), [period]);
   return useFetchJSON<ToolAnalysis>(
     `/api/v1/tools/${category}?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`,
+  );
+}
+
+export function useUserDetail(uid: string, period: Period): FetchState<UserDetail> {
+  const { start, end } = useMemo(() => periodToDateRange(period), [period]);
+  return useFetchJSON<UserDetail>(
+    `/api/v1/users/${encodeURIComponent(uid)}?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`,
   );
 }
 

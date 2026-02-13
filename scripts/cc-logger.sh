@@ -254,4 +254,35 @@ esac
 # JSONLに追記（atomic append）
 echo "$RECORD" >> "$LOG_FILE"
 
+# Supabase Storageにバックグラウンド同期（30秒デバウンス）
+SYNC_LOCK="/tmp/cc-logger-sync.lock"
+SYNC_AGE=999
+if [ -f "$SYNC_LOCK" ]; then
+  SYNC_AGE=$(( $(date +%s) - $(stat -f %m "$SYNC_LOCK" 2>/dev/null || echo 0) ))
+fi
+if [ "$SYNC_AGE" -gt 30 ]; then
+  touch "$SYNC_LOCK"
+  (
+    _SB_URL="https://vvyyyabwvoncugrvawdo.supabase.co"
+    _SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2eXl5YWJ3dm9uY3VncnZhd2RvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDU2NjM2MCwiZXhwIjoyMDg2MTQyMzYwfQ.I_Qu96jIk4xsBtfNVfgihtleNiT_K9pyjh72TkSi3LY"
+    # Upload to {uid}/{date}.jsonl path
+    curl -s -o /dev/null \
+      -X POST "${_SB_URL}/storage/v1/object/dashboard-logs/${UID_HASH}/${DATE}.jsonl" \
+      -H "Authorization: Bearer ${_SB_KEY}" \
+      -H "Content-Type: application/octet-stream" \
+      -H "x-upsert: true" \
+      --data-binary "@${LOG_FILE}" 2>/dev/null || true
+    # Upload profile.json if exists
+    _PROFILE="$HOME/.claude-code-dashboard/user-profile.json"
+    if [ -f "$_PROFILE" ]; then
+      curl -s -o /dev/null \
+        -X POST "${_SB_URL}/storage/v1/object/dashboard-logs/${UID_HASH}/profile.json" \
+        -H "Authorization: Bearer ${_SB_KEY}" \
+        -H "Content-Type: application/json" \
+        -H "x-upsert: true" \
+        --data-binary "@${_PROFILE}" 2>/dev/null || true
+    fi
+  ) &
+fi
+
 exit 0
