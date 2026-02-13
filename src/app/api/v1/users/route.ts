@@ -4,6 +4,7 @@ import path from "node:path";
 import { NextRequest, NextResponse } from "next/server";
 import { aggregateByUser } from "@/lib/aggregator";
 import { loadEvents } from "@/lib/parser";
+import { fetchUserProfiles } from "@/lib/supabase";
 import type { UserSummary } from "@/types";
 
 const SORTABLE = new Set(["skill", "subagent", "mcp", "command", "message", "total", "lastActive", "name"]);
@@ -24,7 +25,12 @@ function parseRange(request: NextRequest) {
   return { start, end };
 }
 
-function resolveName(uid: string): string {
+async function resolveName(uid: string): Promise<string> {
+  if (process.env.VERCEL) {
+    const profiles = await fetchUserProfiles();
+    return profiles[uid] ?? uid;
+  }
+
   const profilePath = path.join(os.homedir(), ".claude-code-dashboard", "user-profile.json");
   if (!fs.existsSync(profilePath)) return uid;
   try {
@@ -48,7 +54,9 @@ export async function GET(request: NextRequest): Promise<NextResponse<UserSummar
   }
 
   const events = await loadEvents(getLogDir(), range.start, range.end);
-  const users = aggregateByUser(events).map((user) => ({ ...user, name: resolveName(user.uid) }));
+  const users = await Promise.all(
+    aggregateByUser(events).map(async (user) => ({ ...user, name: await resolveName(user.uid) })),
+  );
 
   users.sort((a, b) => {
     const dir = sortOrder === "asc" ? 1 : -1;

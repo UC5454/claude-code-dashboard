@@ -70,7 +70,9 @@ export default function UserTable({ rows, isLoading, error }: UserTableProps) {
           ユーザー別利用状況
         </h2>
         <a
-          href="#"
+          href="https://github.com/UC5454/claude-code-dashboard#setup"
+          target="_blank"
+          rel="noopener noreferrer"
           className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
         >
           セットアップガイド

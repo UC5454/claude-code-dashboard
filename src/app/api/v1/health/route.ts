@@ -2,6 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { NextResponse } from "next/server";
+import { listLogFiles } from "@/lib/supabase";
 
 function getLogDir() {
   return process.env.LOG_DIR?.replace(/^~(?=\/)/, os.homedir()) ?? `${os.homedir()}/.claude-code-dashboard/logs`;
@@ -25,7 +26,18 @@ function dirStats(dir: string): { bytes: number; events: number; files: number }
 }
 
 export async function GET(): Promise<NextResponse> {
+  if (process.env.VERCEL) {
+    const files = await listLogFiles();
+    return NextResponse.json({
+      status: "ok",
+      source: "supabase-storage",
+      files: files.length,
+      fileList: files.slice(0, 20),
+      timestamp: new Date().toISOString(),
+    });
+  }
+
   const logDir = getLogDir();
   const stats = dirStats(logDir);
-  return NextResponse.json({ status: "ok", logDir, ...stats, timestamp: new Date().toISOString() });
+  return NextResponse.json({ status: "ok", source: "filesystem", logDir, ...stats, timestamp: new Date().toISOString() });
 }

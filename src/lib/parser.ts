@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import readline from "node:readline";
 import type { BaseEvent } from "@/types";
+import { fetchLogFile } from "@/lib/supabase";
 
 export async function parseJSONL(filePath: string): Promise<BaseEvent[]> {
   if (!fs.existsSync(filePath)) return [];
@@ -28,6 +29,22 @@ export async function parseJSONL(filePath: string): Promise<BaseEvent[]> {
   return events;
 }
 
+function parseJSONLText(text: string): BaseEvent[] {
+  const events: BaseEvent[] = [];
+  for (const line of text.split("\n")) {
+    if (!line.trim()) continue;
+    try {
+      const parsed = JSON.parse(line) as BaseEvent;
+      if (parsed.event && parsed.ts) {
+        events.push(parsed);
+      }
+    } catch {
+      // skip invalid lines
+    }
+  }
+  return events;
+}
+
 export function filterByDateRange(events: BaseEvent[], start: Date, end: Date): BaseEvent[] {
   const startMs = start.getTime();
   const endMs = end.getTime();
@@ -50,7 +67,34 @@ function toDateKey(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
+async function loadEventsFromStorage(startDate: Date, endDate: Date): Promise<BaseEvent[]> {
+  const events: BaseEvent[] = [];
+  const cursor = new Date(Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth(), startDate.getUTCDate()));
+  const end = new Date(Date.UTC(endDate.getUTCFullYear(), endDate.getUTCMonth(), endDate.getUTCDate()));
+
+  const fetches: Promise<BaseEvent[]>[] = [];
+
+  while (cursor <= end) {
+    const dateKey = toDateKey(cursor);
+    fetches.push(
+      fetchLogFile(dateKey).then((text) => (text ? parseJSONLText(text) : [])),
+    );
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+
+  const results = await Promise.all(fetches);
+  for (const result of results) {
+    events.push(...result);
+  }
+
+  return filterByDateRange(events, startDate, endDate);
+}
+
 export async function loadEvents(logDir: string, startDate: Date, endDate: Date): Promise<BaseEvent[]> {
+  if (process.env.VERCEL) {
+    return loadEventsFromStorage(startDate, endDate);
+  }
+
   const events: BaseEvent[] = [];
   const cursor = new Date(Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth(), startDate.getUTCDate()));
   const end = new Date(Date.UTC(endDate.getUTCFullYear(), endDate.getUTCMonth(), endDate.getUTCDate()));

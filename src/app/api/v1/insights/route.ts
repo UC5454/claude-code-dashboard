@@ -32,6 +32,8 @@ function cacheFile() {
   return path.join(os.homedir(), ".claude-code-dashboard", "data", "insights-cache.json");
 }
 
+const memoryCache = new Map<string, { generatedAt: string; insights: InsightCard[] }>();
+
 function buildFallbackInsights(kpi: ReturnType<typeof aggregateKPIs>, topUsers: ReturnType<typeof aggregateByUser>): InsightCard[] {
   const leader = topUsers[0];
   return [
@@ -73,6 +75,49 @@ function buildFallbackInsights(kpi: ReturnType<typeof aggregateKPIs>, topUsers: 
   ];
 }
 
+function readCache(key: string, ttl: number): { generatedAt: string; insights: InsightCard[] } | null {
+  // In-memory cache (works on both Vercel and local)
+  const memHit = memoryCache.get(key);
+  if (memHit) {
+    const ageSec = (Date.now() - new Date(memHit.generatedAt).getTime()) / 1000;
+    if (ageSec <= ttl) return memHit;
+  }
+
+  // File cache (local only)
+  if (process.env.VERCEL) return null;
+  const file = cacheFile();
+  if (!fs.existsSync(file)) return null;
+  try {
+    const cache = JSON.parse(fs.readFileSync(file, "utf8")) as Record<string, { generatedAt: string; insights: InsightCard[] }>;
+    const hit = cache[key];
+    if (hit) {
+      const ageSec = (Date.now() - new Date(hit.generatedAt).getTime()) / 1000;
+      if (ageSec <= ttl) {
+        memoryCache.set(key, hit);
+        return hit;
+      }
+    }
+  } catch {
+    // ignore broken cache
+  }
+  return null;
+}
+
+function writeCache(key: string, entry: { generatedAt: string; insights: InsightCard[] }) {
+  memoryCache.set(key, entry);
+
+  if (process.env.VERCEL) return;
+  try {
+    const file = cacheFile();
+    const dir = path.dirname(file);
+    fs.mkdirSync(dir, { recursive: true });
+    const existing = fs.existsSync(file) ? (JSON.parse(fs.readFileSync(file, "utf8")) as Record<string, unknown>) : {};
+    fs.writeFileSync(file, JSON.stringify({ ...existing, [key]: entry }, null, 2));
+  } catch {
+    // ignore write errors
+  }
+}
+
 export async function GET(request: NextRequest): Promise<NextResponse<InsightsResponse | { error: string }>> {
   const range = parseRange(request);
   if (!range) return NextResponse.json({ error: "invalid start/end" }, { status: 400 });
@@ -83,24 +128,10 @@ export async function GET(request: NextRequest): Promise<NextResponse<InsightsRe
     .createHash("sha256")
     .update(`${range.start.toISOString()}|${range.end.toISOString()}`)
     .digest("hex");
-  const file = cacheFile();
 
-  if (fs.existsSync(file)) {
-    try {
-      const cache = JSON.parse(fs.readFileSync(file, "utf8")) as Record<
-        string,
-        { generatedAt: string; insights: InsightCard[] }
-      >;
-      const hit = cache[key];
-      if (hit) {
-        const ageSec = (Date.now() - new Date(hit.generatedAt).getTime()) / 1000;
-        if (ageSec <= ttl) {
-          return NextResponse.json({ generatedAt: hit.generatedAt, insights: hit.insights, cached: true });
-        }
-      }
-    } catch {
-      // ignore broken cache
-    }
+  const cached = readCache(key, ttl);
+  if (cached) {
+    return NextResponse.json({ generatedAt: cached.generatedAt, insights: cached.insights, cached: true });
   }
 
   const logDir = process.env.LOG_DIR?.replace(/^~(?=\/)/, os.homedir()) ?? `${os.homedir()}/.claude-code-dashboard/logs`;
@@ -133,12 +164,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<InsightsRe
     cached: false,
   };
 
-  const dir = path.dirname(file);
-  fs.mkdirSync(dir, { recursive: true });
-  const cache = fs.existsSync(file)
-    ? (JSON.parse(fs.readFileSync(file, "utf8")) as Record<string, unknown>)
-    : {};
-  fs.writeFileSync(file, JSON.stringify({ ...cache, [key]: { generatedAt: payload.generatedAt, insights } }, null, 2));
+  writeCache(key, { generatedAt: payload.generatedAt, insights });
 
   return NextResponse.json(payload);
 }
