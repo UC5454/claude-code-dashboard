@@ -4,6 +4,7 @@ export interface KPIData {
   change: number;
   changeLabel: string;
   sparkData: number[];
+  href?: string;
   suffix?: string;
   type?: "default" | "progress";
   progressValue?: number;
@@ -95,6 +96,8 @@ export interface ToolAnalysis {
   trend: TrendDataPoint[];
   distribution: SkillDistribution[];
   ranking: SkillBarData[];
+  byUser: SkillBarData[];
+  byUsecase: SkillBarData[];
 }
 
 export interface InsightsResponse {

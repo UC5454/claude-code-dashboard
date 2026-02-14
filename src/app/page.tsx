@@ -36,6 +36,7 @@ export default function DashboardPage() {
           change: kpis.data.skills.changeRate,
           changeLabel: toChangeLabel(kpis.data.skills.changeRate),
           sparkData: kpis.data.skills.sparkline,
+          href: "/analytics/tools?tab=skill",
         },
         {
           label: "Subagent数",
@@ -43,6 +44,7 @@ export default function DashboardPage() {
           change: kpis.data.subagents.changeRate,
           changeLabel: toChangeLabel(kpis.data.subagents.changeRate),
           sparkData: kpis.data.subagents.sparkline,
+          href: "/analytics/tools?tab=subagent",
         },
         {
           label: "MCP呼び出し",
@@ -50,6 +52,7 @@ export default function DashboardPage() {
           change: kpis.data.mcpCalls.changeRate,
           changeLabel: toChangeLabel(kpis.data.mcpCalls.changeRate),
           sparkData: kpis.data.mcpCalls.sparkline,
+          href: "/analytics/tools?tab=mcp",
         },
         {
           label: "メッセージ",
@@ -57,6 +60,7 @@ export default function DashboardPage() {
           change: kpis.data.messages.changeRate,
           changeLabel: toChangeLabel(kpis.data.messages.changeRate),
           sparkData: kpis.data.messages.sparkline,
+          href: "/analytics/tools?tab=command",
         },
         {
           label: "アクティブ",
@@ -64,6 +68,7 @@ export default function DashboardPage() {
           change: 0,
           changeLabel: "",
           sparkData: [],
+          href: "/users",
           suffix: `/ ${kpis.data.activeUsers.total}名`,
           type: "progress",
           progressValue: kpis.data.activeUsers.active,
@@ -76,6 +81,7 @@ export default function DashboardPage() {
           change: kpis.data.sessions.changeRate,
           changeLabel: toChangeLabel(kpis.data.sessions.changeRate),
           sparkData: kpis.data.sessions.sparkline,
+          href: "/analytics/tools",
         },
       ];
 

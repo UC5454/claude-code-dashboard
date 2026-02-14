@@ -275,12 +275,36 @@ export function aggregateByToolCategory(events: BaseEvent[], category: ToolCateg
 
   const { distribution, ranking } = topNAsDistribution(counter, 7);
 
+  // By-user breakdown
+  const userCounter = new Map<string, number>();
+  for (const event of selected) {
+    const uid = event.uid || "unknown";
+    userCounter.set(uid, (userCounter.get(uid) ?? 0) + 1);
+  }
+  const byUser = [...userCounter.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([name, count]) => ({ name, count }));
+
+  // By-usecase (project) breakdown
+  const usecaseCounter = new Map<string, number>();
+  for (const event of selected) {
+    const project = String(event.project || "unknown");
+    usecaseCounter.set(project, (usecaseCounter.get(project) ?? 0) + 1);
+  }
+  const byUsecase = [...usecaseCounter.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([name, count]) => ({ name, count }));
+
   return {
     category,
     total: selected.length,
     trend: generateTrend(selected, "hour"),
     distribution,
     ranking,
+    byUser,
+    byUsecase,
   };
 }
 

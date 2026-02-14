@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import SparkLine from "./SparkLine";
 import type { KPIData } from "@/types";
@@ -12,13 +13,13 @@ export default function KPICard({ data }: KPICardProps) {
   const isPositive = data.change > 0;
   const isNeutral = data.change === 0;
 
-  return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-5 flex flex-col justify-between hover:shadow-md transition-shadow">
+  const content = (
+    <>
       <div className="flex items-center justify-between mb-1">
         <span className="text-xs text-gray-500 font-medium uppercase tracking-wide">
           {data.label}
         </span>
-        <ChevronRight className="w-4 h-4 text-gray-400" />
+        <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform ${data.href ? "group-hover:translate-x-0.5" : ""}`} />
       </div>
 
       {!isNeutral && (
@@ -58,6 +59,23 @@ export default function KPICard({ data }: KPICardProps) {
           color={isPositive ? "#10b981" : "#ef4444"}
         />
       )}
+    </>
+  );
+
+  if (data.href) {
+    return (
+      <Link
+        href={data.href}
+        className="group bg-white rounded-lg shadow-sm border border-gray-100 p-5 flex flex-col justify-between hover:shadow-md transition-shadow cursor-pointer"
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-5 flex flex-col justify-between hover:shadow-md transition-shadow">
+      {content}
     </div>
   );
 }

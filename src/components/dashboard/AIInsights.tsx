@@ -4,6 +4,17 @@ import { Sparkles } from "lucide-react";
 import { insightsData } from "@/lib/mock-data";
 import type { InsightCard } from "@/types";
 
+const typeLabel: Record<string, string> = {
+  "TREND UP": "上昇トレンド",
+  "TREND DOWN": "下降トレンド",
+  "POWER USER": "ヘビーユーザー",
+  "USECASE INSIGHT": "活用パターン",
+  TREND_UP: "上昇トレンド",
+  TREND_DOWN: "下降トレンド",
+  POWER_USER: "ヘビーユーザー",
+  USECASE_INSIGHT: "活用パターン",
+};
+
 interface AIInsightsProps {
   insights?: InsightCard[];
   generatedAt?: string;
@@ -41,7 +52,7 @@ export default function AIInsights({ insights, generatedAt, isLoading, error }: 
             <span
               className={`text-[10px] font-bold uppercase tracking-wider ${insight.color}`}
             >
-              {insight.type.replace(/_/g, " ")}
+              {typeLabel[insight.type] ?? insight.type.replace(/_/g, " ")}
             </span>
             <h3 className="text-sm font-semibold text-gray-900 mt-2 mb-1">
               {insight.title}
