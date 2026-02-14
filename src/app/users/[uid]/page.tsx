@@ -1,9 +1,12 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Header from "@/components/layout/Header";
-import { useUserDetail } from "@/lib/api";
+import AIInsights from "@/components/dashboard/AIInsights";
+import { useUserDetail, useUserInsights } from "@/lib/api";
 import { usePeriod } from "@/hooks/usePeriod";
 import {
   BarChart,
@@ -19,7 +22,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { ArrowLeft, Calendar, Clock, Layers, Terminal } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, Layers, Terminal, Trash2 } from "lucide-react";
 
 function formatDate(iso: string): string {
   if (!iso) return "-";
@@ -34,10 +37,83 @@ function formatDateTime(iso: string): string {
   return `${jst.getUTCMonth() + 1}/${jst.getUTCDate()} ${String(jst.getUTCHours()).padStart(2, "0")}:${String(jst.getUTCMinutes()).padStart(2, "0")}`;
 }
 
+function formatInsightsTime(iso?: string): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const jst = new Date(d.getTime() + 9 * 3600000);
+  return `${jst.getUTCMonth() + 1}/${jst.getUTCDate()} ${String(jst.getUTCHours()).padStart(2, "0")}:${String(jst.getUTCMinutes()).padStart(2, "0")}`;
+}
+
+function ConfirmDialog({
+  open,
+  title,
+  message,
+  onConfirm,
+  onCancel,
+  isLoading,
+}: {
+  open: boolean;
+  title: string;
+  message: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+  isLoading: boolean;
+}) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl">
+        <h3 className="text-lg font-bold text-gray-900 mb-2">{title}</h3>
+        <p className="text-sm text-gray-600 mb-6">{message}</p>
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={onCancel}
+            disabled={isLoading}
+            className="px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+          >
+            キャンセル
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={isLoading}
+            className="px-4 py-2 text-sm text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50"
+          >
+            {isLoading ? "削除中..." : "削除する"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function UserDetailPage({ params }: { params: Promise<{ uid: string }> }) {
   const { uid } = use(params);
+  const router = useRouter();
+  const { data: session } = useSession();
   const { period } = usePeriod("7D");
   const { data, isLoading, error } = useUserDetail(uid, period);
+  const insights = useUserInsights(uid, period);
+
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
+      const res = await fetch(`/api/v1/users/${encodeURIComponent(uid)}`, { method: "DELETE" });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({ error: "Unknown error" }));
+        throw new Error(body.error ?? `HTTP ${res.status}`);
+      }
+      router.push("/users");
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : "削除に失敗しました");
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
+    }
+  };
 
   const hourlyData = data?.hourlyActivity.map((count, hour) => ({
     hour: `${String(hour).padStart(2, "0")}`,
@@ -58,13 +134,27 @@ export default function UserDetailPage({ params }: { params: Promise<{ uid: stri
 
         {isLoading && <p className="text-sm text-gray-500">読み込み中...</p>}
         {error && <p className="text-sm text-red-600">{error.message}</p>}
+        {deleteError && <p className="text-sm text-red-600 mb-4">{deleteError}</p>}
 
         {data && (
           <>
             {/* Header Stats */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 mb-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-1">{data.name}</h2>
-              <p className="text-xs text-gray-400 mb-4">UID: {data.uid}</p>
+              <div className="flex items-start justify-between mb-1">
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">{data.name}</h2>
+                  <p className="text-xs text-gray-400 mb-4">UID: {data.uid}</p>
+                </div>
+                {session?.user?.isAdmin && (
+                  <button
+                    onClick={() => setShowDeleteDialog(true)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    ユーザー削除
+                  </button>
+                )}
+              </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 bg-blue-50 rounded-lg flex items-center justify-center">
@@ -103,6 +193,16 @@ export default function UserDetailPage({ params }: { params: Promise<{ uid: stri
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* AI Insights */}
+            <div className="mb-6">
+              <AIInsights
+                insights={insights.data?.insights}
+                generatedAt={formatInsightsTime(insights.data?.generatedAt)}
+                isLoading={insights.isLoading}
+                error={insights.error?.message}
+              />
             </div>
 
             {/* Daily Trend */}
@@ -281,6 +381,15 @@ export default function UserDetailPage({ params }: { params: Promise<{ uid: stri
           </>
         )}
       </main>
+
+      <ConfirmDialog
+        open={showDeleteDialog}
+        title="ユーザーデータの削除"
+        message={`「${data?.name ?? uid}」のすべてのデータを削除します。この操作は取り消せません。`}
+        onConfirm={handleDelete}
+        onCancel={() => setShowDeleteDialog(false)}
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

@@ -101,6 +101,14 @@ export function useUserDetail(uid: string, period: Period): FetchState<UserDetai
   );
 }
 
+export function useUserInsights(uid: string, period: Period): FetchState<InsightsResponse> {
+  const { start, end } = useMemo(() => periodToDateRange(period), [period]);
+  return useFetchJSON<InsightsResponse>(
+    `/api/v1/users/${encodeURIComponent(uid)}/insights?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`,
+    3600000,
+  );
+}
+
 export function useInsights(period: Period): FetchState<InsightsResponse> {
   const { start, end } = useMemo(() => periodToDateRange(period), [period]);
   return useFetchJSON<InsightsResponse>(

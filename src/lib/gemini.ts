@@ -90,6 +90,40 @@ async function generateViaRest(apiKey: string, prompt: string): Promise<string> 
   return text;
 }
 
+function buildUserPrompt(userData: object): string {
+  return `以下のユーザー個別のClaude Code利用データを分析し、3つのインサイトをJSON形式で返してください。
+
+インサイトの種類:
+- TREND_UP: 利用が増加しているツール・機能
+- TREND_DOWN: 利用が減少しているツール・機能
+- USECASE_INSIGHT: このユーザー固有の利用パターン・改善提案
+
+出力形式:
+[
+  { "type": "TREND_UP", "title": "タイトル", "description": "詳細説明（改善提案を含む）" }
+]
+
+ユーザーデータ:
+${JSON.stringify(userData, null, 2)}`;
+}
+
+export async function generateUserInsights(userData: object, maxCount: number): Promise<InsightCard[]> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("GEMINI_API_KEY is not set");
+
+  const prompt = buildUserPrompt(userData);
+
+  let rawText = "";
+  try {
+    rawText = await generateViaSdk(apiKey, prompt);
+  } catch {
+    rawText = await generateViaRest(apiKey, prompt);
+  }
+
+  const parsed = JSON.parse(extractJSONArray(rawText)) as GeminiInsight[];
+  return toInsightCards(parsed, maxCount);
+}
+
 export async function generateInsights(aggregatedData: object, maxCount: number): Promise<InsightCard[]> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error("GEMINI_API_KEY is not set");

@@ -2,6 +2,7 @@ import type { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 
 const ALLOWED_DOMAIN = "digital-gorilla.co.jp";
+export const ADMIN_EMAIL = "y.chiba@digital-gorilla.co.jp";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -17,9 +18,19 @@ export const authOptions: NextAuthOptions = {
       }
       return false;
     },
+    async jwt({ token, profile }) {
+      if (profile?.email) {
+        token.email = profile.email;
+      }
+      return token;
+    },
     async session({ session, token }) {
       if (session.user && token.sub) {
         session.user.id = token.sub;
+      }
+      if (token.email) {
+        session.user.email = token.email as string;
+        session.user.isAdmin = token.email === ADMIN_EMAIL;
       }
       return session;
     },

@@ -1,8 +1,10 @@
 import os from "node:os";
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/auth";
 import { aggregateUserDetail } from "@/lib/aggregator";
 import { loadEvents } from "@/lib/parser";
-import { fetchUserProfiles, resolveUserName } from "@/lib/supabase";
+import { deleteUserData, fetchUserProfiles, resolveUserName } from "@/lib/supabase";
 import type { UserDetail } from "@/types";
 
 function getLogDir() {
@@ -31,4 +33,24 @@ export async function GET(
   const name = resolveUserName(profiles, uid);
 
   return NextResponse.json({ ...detail, name });
+}
+
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ uid: string }> },
+): Promise<NextResponse<{ success: boolean } | { error: string }>> {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.isAdmin) {
+    return NextResponse.json({ error: "Forbidden: admin only" }, { status: 403 });
+  }
+
+  const { uid } = await params;
+
+  const success = await deleteUserData(uid);
+  if (!success) {
+    return NextResponse.json({ error: "Failed to delete user data" }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true });
 }

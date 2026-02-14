@@ -169,3 +169,31 @@ export async function fetchUserProfiles(): Promise<Record<string, UserProfile>> 
 export function resolveUserName(profiles: Record<string, UserProfile>, uid: string): string {
   return profiles[uid]?.git_name ?? uid;
 }
+
+export async function deleteUserData(uid: string): Promise<boolean> {
+  if (!supabase) return false;
+
+  const { data: files, error: listError } = await supabase.storage
+    .from(BUCKET)
+    .list(uid, { limit: 1000 });
+
+  if (listError || !files) return false;
+
+  const paths = files.map((f) => `${uid}/${f.name}`);
+  if (paths.length === 0) return true;
+
+  const { error: removeError } = await supabase.storage
+    .from(BUCKET)
+    .remove(paths);
+
+  if (removeError) return false;
+
+  // Clear caches
+  userListCache = null;
+  profileCache = null;
+  for (const key of fileCache.keys()) {
+    if (key.startsWith(`${uid}/`)) fileCache.delete(key);
+  }
+
+  return true;
+}
