@@ -170,6 +170,12 @@ export function resolveUserName(profiles: Record<string, UserProfile>, uid: stri
   return profiles[uid]?.git_name ?? uid;
 }
 
+export function clearAllCaches() {
+  userListCache = null;
+  profileCache = null;
+  fileCache.clear();
+}
+
 export async function deleteUserData(uid: string): Promise<boolean> {
   if (!supabase) return false;
 
@@ -188,12 +194,8 @@ export async function deleteUserData(uid: string): Promise<boolean> {
 
   if (removeError) return false;
 
-  // Clear caches
-  userListCache = null;
-  profileCache = null;
-  for (const key of fileCache.keys()) {
-    if (key.startsWith(`${uid}/`)) fileCache.delete(key);
-  }
+  // Clear ALL caches aggressively to ensure deleted user disappears immediately
+  clearAllCaches();
 
   return true;
 }

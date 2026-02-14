@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/auth";
 import { aggregateUserDetail } from "@/lib/aggregator";
 import { loadEvents } from "@/lib/parser";
-import { deleteUserData, fetchUserProfiles, resolveUserName } from "@/lib/supabase";
+import { clearAllCaches, deleteUserData, fetchUserProfiles, resolveUserName } from "@/lib/supabase";
 import type { UserDetail } from "@/types";
 
 function getLogDir() {

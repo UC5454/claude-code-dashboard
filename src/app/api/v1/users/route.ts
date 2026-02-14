@@ -4,7 +4,7 @@ import path from "node:path";
 import { NextRequest, NextResponse } from "next/server";
 import { aggregateByUser } from "@/lib/aggregator";
 import { loadEvents } from "@/lib/parser";
-import { fetchUserProfiles } from "@/lib/supabase";
+import { clearAllCaches, fetchUserProfiles } from "@/lib/supabase";
 import type { UserSummary } from "@/types";
 
 const SORTABLE = new Set(["skill", "subagent", "mcp", "command", "message", "total", "lastActive", "name"]);
@@ -45,6 +45,11 @@ async function resolveName(uid: string): Promise<string> {
 export async function GET(request: NextRequest): Promise<NextResponse<UserSummary[] | { error: string }>> {
   const range = parseRange(request);
   if (!range) return NextResponse.json({ error: "invalid start/end" }, { status: 400 });
+
+  // Cache bust: if _cb param is present, clear all caches first
+  if (request.nextUrl.searchParams.has("_cb")) {
+    clearAllCaches();
+  }
 
   const sortBy = request.nextUrl.searchParams.get("sort_by") ?? "total";
   const sortOrder = request.nextUrl.searchParams.get("sort_order") ?? "desc";

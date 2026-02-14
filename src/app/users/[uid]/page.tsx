@@ -107,7 +107,8 @@ export default function UserDetailPage({ params }: { params: Promise<{ uid: stri
         const body = await res.json().catch(() => ({ error: "Unknown error" }));
         throw new Error(body.error ?? `HTTP ${res.status}`);
       }
-      router.push("/users");
+      // Force cache bust on redirect
+      window.location.href = "/users";
     } catch (err) {
       setDeleteError(err instanceof Error ? err.message : "削除に失敗しました");
       setIsDeleting(false);
