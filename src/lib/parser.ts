@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import readline from "node:readline";
 import type { BaseEvent } from "@/types";
-import { fetchAllUsersLogFile } from "@/lib/supabase";
+import { fetchAllUsersLogFile, getDeletedUids } from "@/lib/supabase";
 
 export async function parseJSONL(filePath: string): Promise<BaseEvent[]> {
   if (!fs.existsSync(filePath)) return [];
@@ -91,6 +91,12 @@ async function loadEventsFromStorage(startDate: Date, endDate: Date): Promise<Ba
   const results = await Promise.all(fetches);
   for (const result of results) {
     events.push(...result);
+  }
+
+  // Filter out deleted users
+  const deletedUids = await getDeletedUids();
+  if (deletedUids.size > 0) {
+    return filterByDateRange(events, startDate, endDate).filter((e) => !deletedUids.has(e.uid));
   }
 
   return filterByDateRange(events, startDate, endDate);

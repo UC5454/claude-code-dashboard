@@ -40,7 +40,8 @@ export async function listUserDirs(): Promise<string[]> {
   if (error || !data) return [];
 
   // Folders have id=null in Supabase Storage; JSONL files at root are legacy (single-user)
-  const uids = data.filter((f) => f.id === null).map((f) => f.name);
+  const deletedUids = await getDeletedUids();
+  const uids = data.filter((f) => f.id === null && !deletedUids.has(f.name)).map((f) => f.name);
   userListCache = { uids, fetchedAt: Date.now() };
   return uids;
 }
@@ -174,27 +175,75 @@ export function clearAllCaches() {
   userListCache = null;
   profileCache = null;
   fileCache.clear();
+  deletedUidsCache = null;
+}
+
+// --- Deleted UIDs management ---
+// Stores a list of deleted UIDs in Supabase so they are permanently filtered out
+const DELETED_UIDS_PATH = "_meta/deleted-uids.json";
+let deletedUidsCache: { uids: Set<string>; fetchedAt: number } | null = null;
+
+export async function getDeletedUids(): Promise<Set<string>> {
+  if (deletedUidsCache && Date.now() - deletedUidsCache.fetchedAt < CACHE_TTL_MS) {
+    return deletedUidsCache.uids;
+  }
+
+  if (!supabase) return new Set();
+
+  const { data, error } = await supabase.storage.from(BUCKET).download(DELETED_UIDS_PATH);
+  if (error || !data) {
+    deletedUidsCache = { uids: new Set(), fetchedAt: Date.now() };
+    return deletedUidsCache.uids;
+  }
+
+  try {
+    const list = JSON.parse(await data.text()) as string[];
+    const uids = new Set(list);
+    deletedUidsCache = { uids, fetchedAt: Date.now() };
+    return uids;
+  } catch {
+    deletedUidsCache = { uids: new Set(), fetchedAt: Date.now() };
+    return deletedUidsCache.uids;
+  }
+}
+
+async function addDeletedUid(uid: string): Promise<boolean> {
+  if (!supabase) return false;
+
+  const existing = await getDeletedUids();
+  existing.add(uid);
+  const json = JSON.stringify([...existing]);
+
+  const { error } = await supabase.storage.from(BUCKET).upload(DELETED_UIDS_PATH, json, {
+    contentType: "application/json",
+    upsert: true,
+  });
+
+  if (error) return false;
+
+  // Update local cache immediately
+  deletedUidsCache = { uids: existing, fetchedAt: Date.now() };
+  return true;
 }
 
 export async function deleteUserData(uid: string): Promise<boolean> {
   if (!supabase) return false;
 
-  const { data: files, error: listError } = await supabase.storage
+  // 1. Record the UID as deleted (this is the source of truth)
+  const recorded = await addDeletedUid(uid);
+  if (!recorded) return false;
+
+  // 2. Delete actual files (best effort — even if this fails, the UID is blocked)
+  const { data: files } = await supabase.storage
     .from(BUCKET)
     .list(uid, { limit: 1000 });
 
-  if (listError || !files) return false;
+  if (files && files.length > 0) {
+    const paths = files.map((f) => `${uid}/${f.name}`);
+    await supabase.storage.from(BUCKET).remove(paths);
+  }
 
-  const paths = files.map((f) => `${uid}/${f.name}`);
-  if (paths.length === 0) return true;
-
-  const { error: removeError } = await supabase.storage
-    .from(BUCKET)
-    .remove(paths);
-
-  if (removeError) return false;
-
-  // Clear ALL caches aggressively to ensure deleted user disappears immediately
+  // 3. Clear ALL caches aggressively
   clearAllCaches();
 
   return true;
