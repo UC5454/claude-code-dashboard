@@ -308,6 +308,142 @@ export default function UserDetailPage({ params }: { params: Promise<{ uid: stri
               </div>
             </div>
 
+            {/* Skill Breakdown + MCP Tools */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+                <h3 className="text-base font-bold text-gray-900 mb-1">スキル利用詳細</h3>
+                <p className="text-xs text-gray-400 mb-4">スラッシュコマンドの内訳</p>
+                {data.skillBreakdown.length > 0 ? (
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={data.skillBreakdown} layout="vertical" barSize={14}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
+                        <XAxis type="number" tick={{ fontSize: 10, fill: "#9ca3af" }} tickLine={false} axisLine={{ stroke: "#e5e7eb" }} />
+                        <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: "#6b7280" }} tickLine={false} axisLine={{ stroke: "#e5e7eb" }} width={120} />
+                        <Tooltip contentStyle={{ borderRadius: "8px", border: "1px solid #e5e7eb", fontSize: "12px" }} />
+                        <Bar dataKey="count" fill="#f59e0b" radius={[0, 4, 4, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-400">スキル利用データなし</p>
+                )}
+              </div>
+
+              <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+                <h3 className="text-base font-bold text-gray-900 mb-1">MCP連携ツール</h3>
+                <p className="text-xs text-gray-400 mb-4">外部サービスとの連携</p>
+                {data.mcpTools.length > 0 ? (
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={data.mcpTools} layout="vertical" barSize={14}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
+                        <XAxis type="number" tick={{ fontSize: 10, fill: "#9ca3af" }} tickLine={false} axisLine={{ stroke: "#e5e7eb" }} />
+                        <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: "#6b7280" }} tickLine={false} axisLine={{ stroke: "#e5e7eb" }} width={140} />
+                        <Tooltip contentStyle={{ borderRadius: "8px", border: "1px solid #e5e7eb", fontSize: "12px" }} />
+                        <Bar dataKey="count" fill="#06b6d4" radius={[0, 4, 4, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-400">MCPデータなし</p>
+                )}
+              </div>
+            </div>
+
+            {/* Model Usage + Permission Modes + Subagent Types */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+                <h3 className="text-base font-bold text-gray-900 mb-1">モデル利用比率</h3>
+                <p className="text-xs text-gray-400 mb-4">Opus / Sonnet / Haiku</p>
+                {data.modelUsage.length > 0 ? (
+                  <>
+                    <div className="w-32 h-32 mx-auto mb-3">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie data={data.modelUsage} cx="50%" cy="50%" innerRadius={30} outerRadius={55} paddingAngle={2} dataKey="value">
+                            {data.modelUsage.map((entry, idx) => (
+                              <Cell key={idx} fill={entry.color} />
+                            ))}
+                          </Pie>
+                          <Tooltip contentStyle={{ borderRadius: "8px", border: "1px solid #e5e7eb", fontSize: "12px" }} formatter={(value) => [`${value}%`, ""]} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      {data.modelUsage.map((item) => (
+                        <div key={item.name} className="flex items-center gap-2">
+                          <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
+                          <span className="text-xs text-gray-600 flex-1">{item.name}</span>
+                          <span className="text-xs font-medium text-gray-900">{item.value}%</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-sm text-gray-400">データなし</p>
+                )}
+              </div>
+
+              <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+                <h3 className="text-base font-bold text-gray-900 mb-1">パーミッションモード</h3>
+                <p className="text-xs text-gray-400 mb-4">実行権限の分布</p>
+                {data.permissionModes.length > 0 ? (
+                  <>
+                    <div className="w-32 h-32 mx-auto mb-3">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie data={data.permissionModes} cx="50%" cy="50%" innerRadius={30} outerRadius={55} paddingAngle={2} dataKey="value">
+                            {data.permissionModes.map((entry, idx) => (
+                              <Cell key={idx} fill={entry.color} />
+                            ))}
+                          </Pie>
+                          <Tooltip contentStyle={{ borderRadius: "8px", border: "1px solid #e5e7eb", fontSize: "12px" }} formatter={(value) => [`${value}%`, ""]} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      {data.permissionModes.map((item) => (
+                        <div key={item.name} className="flex items-center gap-2">
+                          <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
+                          <span className="text-xs text-gray-600 flex-1">{item.name}</span>
+                          <span className="text-xs font-medium text-gray-900">{item.value}%</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-sm text-gray-400">データなし</p>
+                )}
+              </div>
+
+              <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+                <h3 className="text-base font-bold text-gray-900 mb-1">サブエージェント</h3>
+                <p className="text-xs text-gray-400 mb-4">エージェントタイプ別</p>
+                {data.subagentTypes.length > 0 ? (
+                  <div className="flex flex-col gap-2">
+                    {data.subagentTypes.map((item, i) => {
+                      const maxCount = data.subagentTypes[0].count;
+                      const pct = maxCount > 0 ? (item.count / maxCount) * 100 : 0;
+                      return (
+                        <div key={item.name}>
+                          <div className="flex items-center justify-between mb-0.5">
+                            <span className="text-xs text-gray-600 truncate max-w-[140px]">{item.name}</span>
+                            <span className="text-xs font-medium text-gray-900">{item.count}</span>
+                          </div>
+                          <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                            <div className="h-full bg-violet-500 rounded-full" style={{ width: `${pct}%` }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-400">データなし</p>
+                )}
+              </div>
+            </div>
+
             {/* Top Tools + Projects */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
               <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">

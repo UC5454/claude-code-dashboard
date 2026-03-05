@@ -119,6 +119,11 @@ export interface UserDetail {
   dailyTrend: TrendDataPoint[];
   recentSessions: { sid: string; start: string; events: number; project: string }[];
   topTools: SkillBarData[];
+  skillBreakdown: SkillBarData[];
+  modelUsage: SkillDistribution[];
+  permissionModes: SkillDistribution[];
+  mcpTools: SkillBarData[];
+  subagentTypes: SkillBarData[];
 }
 
 export type Period = "1D" | "7D" | "30D" | "All";

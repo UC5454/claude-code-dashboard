@@ -384,6 +384,85 @@ export function aggregateUserDetail(events: BaseEvent[], uid: string): Omit<User
     .slice(0, 10)
     .map(([name, count]) => ({ name, count }));
 
+  // Skill breakdown (which /slash commands are used)
+  const skillCounter = new Map<string, number>();
+  for (const e of userEvents) {
+    if (e.event === "user_prompt" && e.is_skill) {
+      const key = String(e.skill_name || "unknown_skill");
+      skillCounter.set(key, (skillCounter.get(key) ?? 0) + 1);
+    }
+  }
+  const skillBreakdown = [...skillCounter.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 15)
+    .map(([name, count]) => ({ name, count }));
+
+  // Model usage distribution
+  const modelCounter = new Map<string, number>();
+  for (const e of userEvents) {
+    if (e.mid) {
+      const mid = String(e.mid);
+      // Simplify model name
+      let label = mid;
+      if (mid.includes("opus")) label = "Opus";
+      else if (mid.includes("sonnet")) label = "Sonnet";
+      else if (mid.includes("haiku")) label = "Haiku";
+      modelCounter.set(label, (modelCounter.get(label) ?? 0) + 1);
+    }
+  }
+  const modelTotal = [...modelCounter.values()].reduce((a, b) => a + b, 0);
+  const modelPalette = ["#6366f1", "#3b82f6", "#06b6d4", "#10b981", "#f59e0b"];
+  const modelUsage = [...modelCounter.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, count], i) => ({
+      name,
+      value: modelTotal === 0 ? 0 : Number(((count / modelTotal) * 100).toFixed(1)),
+      color: modelPalette[i % modelPalette.length],
+    }));
+
+  // Permission mode distribution
+  const pmodeCounter = new Map<string, number>();
+  for (const e of userEvents) {
+    if (e.pmode) {
+      pmodeCounter.set(String(e.pmode), (pmodeCounter.get(String(e.pmode)) ?? 0) + 1);
+    }
+  }
+  const pmodeTotal = [...pmodeCounter.values()].reduce((a, b) => a + b, 0);
+  const pmodePalette = ["#8b5cf6", "#ec4899", "#f97316", "#14b8a6", "#64748b"];
+  const permissionModes = [...pmodeCounter.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, count], i) => ({
+      name,
+      value: pmodeTotal === 0 ? 0 : Number(((count / pmodeTotal) * 100).toFixed(1)),
+      color: pmodePalette[i % pmodePalette.length],
+    }));
+
+  // MCP tool breakdown
+  const mcpCounter = new Map<string, number>();
+  for (const e of userEvents) {
+    if (e.event === "tool_use" && e.category === "mcp") {
+      const key = String(e.detail || e.tool || "unknown_mcp");
+      mcpCounter.set(key, (mcpCounter.get(key) ?? 0) + 1);
+    }
+  }
+  const mcpTools = [...mcpCounter.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 15)
+    .map(([name, count]) => ({ name, count }));
+
+  // Subagent type breakdown
+  const subagentCounter = new Map<string, number>();
+  for (const e of userEvents) {
+    if (e.event === "subagent_start" || (e.event === "tool_use" && e.category === "subagent")) {
+      const key = String(e.agent_type || e.detail || "unknown_agent");
+      subagentCounter.set(key, (subagentCounter.get(key) ?? 0) + 1);
+    }
+  }
+  const subagentTypes = [...subagentCounter.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([name, count]) => ({ name, count }));
+
   // Basic stats
   const totalEvents = userEvents.length;
   const sessions = new Set(userEvents.map((e) => e.sid)).size;
@@ -406,5 +485,10 @@ export function aggregateUserDetail(events: BaseEvent[], uid: string): Omit<User
     dailyTrend,
     recentSessions,
     topTools,
+    skillBreakdown,
+    modelUsage,
+    permissionModes,
+    mcpTools,
+    subagentTypes,
   };
 }
