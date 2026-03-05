@@ -10,6 +10,7 @@ const tabs = [
   { label: "ツール分析", href: "/analytics/tools" },
   { label: "トークン使用量", href: "/analytics/tokens" },
   { label: "ユーザー一覧", href: "/users" },
+  { label: "ガイド", href: "/guide" },
 ];
 
 const periods: Period[] = ["1D", "7D", "30D", "All"];
