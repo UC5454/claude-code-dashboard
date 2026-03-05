@@ -27,6 +27,8 @@ import {
   Eye,
   Brain,
   Layers,
+  Gauge,
+  Search,
 } from "lucide-react";
 
 /* ─── Section data ─── */
@@ -502,6 +504,330 @@ const sections: GuideSection[] = [
               さらに<span className="font-semibold text-gray-700">「By User」</span>でユーザー別、
               <span className="font-semibold text-gray-700">「By Usecase」</span>でプロジェクト別の内訳も確認可能。
             </p>
+          </div>
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: "patterns",
+    icon: <Search className="w-5 h-5" />,
+    color: "text-rose-600",
+    bgColor: "bg-rose-50",
+    borderColor: "border-rose-200",
+    title: "数字で読む利用傾向",
+    subtitle: "指標の数値パターンから利用スタイルを判断する",
+    content: (
+      <div className="space-y-6">
+        <p className="text-sm text-gray-600">
+          各指標の数値レンジごとに、どのような利用傾向があるかを示します。個人詳細ページと合わせて読むと、各メンバーの活用度がより明確になります。
+        </p>
+
+        {/* Skill */}
+        <div className="bg-white rounded-xl border border-gray-100 p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
+              <Zap className="w-4 h-4 text-amber-600" />
+            </div>
+            <h4 className="text-sm font-bold text-gray-900">Skill実行数（7日間ベース）</h4>
+          </div>
+          <div className="space-y-2">
+            {[
+              { range: "0", label: "未利用", color: "bg-gray-100 text-gray-600 border-gray-200", desc: "スキルを全く使っていない。基本操作のみで、自動化の恩恵を受けていない状態。", action: "/commit や /review-pr など基本スキルの存在を共有し、ハンズオン体験を提供する" },
+              { range: "1〜10", label: "初級", color: "bg-blue-50 text-blue-700 border-blue-200", desc: "基本スキルを試し始めた段階。commit等の頻出スキルに限定されている可能性が高い。", action: "利用中のスキル以外に便利なスキルがないか、スキル一覧を確認してもらう" },
+              { range: "11〜50", label: "中級", color: "bg-emerald-50 text-emerald-700 border-emerald-200", desc: "複数のスキルを日常的に活用。ワークフローに組み込めている。", action: "どのスキルが特に効果的か共有してもらい、チーム全体に横展開する" },
+              { range: "50+", label: "ヘビー", color: "bg-purple-50 text-purple-700 border-purple-200", desc: "スキルをフル活用。自動化率が高く、効率的なワークフローが確立されている。", action: "このユーザーの使い方をパワーユーザー事例としてチームに共有する" },
+            ].map((item) => (
+              <div key={item.range} className={`rounded-lg border px-4 py-3 ${item.color}`}>
+                <div className="flex items-center gap-3 mb-1">
+                  <span className="text-xs font-bold min-w-[48px]">{item.range}</span>
+                  <span className="text-[10px] font-semibold uppercase tracking-wider opacity-75">{item.label}</span>
+                </div>
+                <p className="text-[11px] leading-relaxed opacity-90 mb-1">{item.desc}</p>
+                <p className="text-[10px] opacity-70"><span className="font-semibold">Next Action:</span> {item.action}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Subagent */}
+        <div className="bg-white rounded-xl border border-gray-100 p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center">
+              <Brain className="w-4 h-4 text-violet-600" />
+            </div>
+            <h4 className="text-sm font-bold text-gray-900">Subagent利用数（7日間ベース）</h4>
+          </div>
+          <div className="space-y-2">
+            {[
+              { range: "0", label: "未利用", color: "bg-gray-100 text-gray-600 border-gray-200", desc: "サブエージェントを使っていない。単純な一問一答の対話のみ。", action: "「複雑なタスクはSubagentに分割できる」ことを伝え、Exploreエージェントの活用例を共有" },
+              { range: "1〜10", label: "試用", color: "bg-blue-50 text-blue-700 border-blue-200", desc: "Explore等の基本エージェントを試し始めた段階。並列処理の概念は理解し始めている。", action: "Plan エージェントで実装計画を立ててから作業する流れを提案する" },
+              { range: "11〜30", label: "活用", color: "bg-emerald-50 text-emerald-700 border-emerald-200", desc: "タスクの複雑さに応じてエージェントを使い分けている。効率的な開発フロー。", action: "general-purpose エージェントでの並列作業やworktree活用も検討" },
+              { range: "30+", label: "上級", color: "bg-purple-50 text-purple-700 border-purple-200", desc: "複雑なタスクを細かく分解し、エージェントを駆使。チームワーク型のAI活用。", action: "エージェント活用のベストプラクティスをドキュメント化してチームに共有" },
+            ].map((item) => (
+              <div key={item.range} className={`rounded-lg border px-4 py-3 ${item.color}`}>
+                <div className="flex items-center gap-3 mb-1">
+                  <span className="text-xs font-bold min-w-[48px]">{item.range}</span>
+                  <span className="text-[10px] font-semibold uppercase tracking-wider opacity-75">{item.label}</span>
+                </div>
+                <p className="text-[11px] leading-relaxed opacity-90 mb-1">{item.desc}</p>
+                <p className="text-[10px] opacity-70"><span className="font-semibold">Next Action:</span> {item.action}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* MCP */}
+        <div className="bg-white rounded-xl border border-gray-100 p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-cyan-50 flex items-center justify-center">
+              <Plug className="w-4 h-4 text-cyan-600" />
+            </div>
+            <h4 className="text-sm font-bold text-gray-900">MCP呼び出し数（7日間ベース）</h4>
+          </div>
+          <div className="space-y-2">
+            {[
+              { range: "0", label: "未連携", color: "bg-gray-100 text-gray-600 border-gray-200", desc: "外部サービス連携を使っていない。Claude Code内で完結する作業のみ。", action: "Slack通知やDrive読み書きなど、すぐ使える連携を1つ試してもらう" },
+              { range: "1〜20", label: "基本連携", color: "bg-blue-50 text-blue-700 border-blue-200", desc: "1〜2サービスとの連携を利用。Slack投稿やDrive読み取り等の基本操作。", action: "Notion・Calendar等の他サービスも連携すると業務範囲が広がることを伝える" },
+              { range: "21〜100", label: "統合活用", color: "bg-emerald-50 text-emerald-700 border-emerald-200", desc: "複数サービスを横断的に活用。情報収集→加工→発信のワークフローが確立。", action: "特に効果的な連携パターンをチームに共有してもらう" },
+              { range: "100+", label: "フル活用", color: "bg-purple-50 text-purple-700 border-purple-200", desc: "外部サービスとの高度な統合。業務の大部分をClaude Code起点で処理。", action: "MCPツールの安定性やレート制限に注意。エラー率も合わせて確認" },
+            ].map((item) => (
+              <div key={item.range} className={`rounded-lg border px-4 py-3 ${item.color}`}>
+                <div className="flex items-center gap-3 mb-1">
+                  <span className="text-xs font-bold min-w-[48px]">{item.range}</span>
+                  <span className="text-[10px] font-semibold uppercase tracking-wider opacity-75">{item.label}</span>
+                </div>
+                <p className="text-[11px] leading-relaxed opacity-90 mb-1">{item.desc}</p>
+                <p className="text-[10px] opacity-70"><span className="font-semibold">Next Action:</span> {item.action}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Message per session */}
+        <div className="bg-white rounded-xl border border-gray-100 p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+              <MessageSquare className="w-4 h-4 text-blue-600" />
+            </div>
+            <h4 className="text-sm font-bold text-gray-900">メッセージ数 / セッション数の比率</h4>
+          </div>
+          <p className="text-xs text-gray-500 mb-3">1セッションあたり何回メッセージを送っているかで、対話スタイルがわかります。</p>
+          <div className="space-y-2">
+            {[
+              { range: "1〜5", label: "短セッション", color: "bg-gray-100 text-gray-600 border-gray-200", desc: "1回の起動で少ないやり取り。簡単な質問やワンショットタスクが中心。", insight: "効率的に使えている場合もあるが、Claude Codeの能力を活かしきれていない可能性も" },
+              { range: "6〜20", label: "標準セッション", color: "bg-emerald-50 text-emerald-700 border-emerald-200", desc: "適度な対話量。タスクを段階的に進め、フィードバックを活かしている。", insight: "最も生産性が高いゾーン。1つのセッションで完結度の高い成果が出ている" },
+              { range: "21〜50", label: "長セッション", color: "bg-amber-50 text-amber-700 border-amber-200", desc: "長い対話を続けている。複雑なタスクに取り組んでいるか、試行錯誤が多い。", insight: "成果が出ていればOK。ただしコンテキスト圧縮が発生し精度が下がる可能性に注意" },
+              { range: "50+", label: "超長セッション", color: "bg-red-50 text-red-700 border-red-200", desc: "1セッションに依存しすぎ。コンテキスト限界やループに陥っている可能性。", insight: "タスクを小さく分割してセッションを切り替える方法を提案する" },
+            ].map((item) => (
+              <div key={item.range} className={`rounded-lg border px-4 py-3 ${item.color}`}>
+                <div className="flex items-center gap-3 mb-1">
+                  <span className="text-xs font-bold min-w-[48px]">{item.range}</span>
+                  <span className="text-[10px] font-semibold uppercase tracking-wider opacity-75">{item.label}</span>
+                </div>
+                <p className="text-[11px] leading-relaxed opacity-90 mb-1">{item.desc}</p>
+                <p className="text-[10px] opacity-70"><span className="font-semibold">Insight:</span> {item.insight}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Model usage patterns */}
+        <div className="bg-white rounded-xl border border-gray-100 p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
+              <Cpu className="w-4 h-4 text-indigo-600" />
+            </div>
+            <h4 className="text-sm font-bold text-gray-900">モデル利用比率の傾向</h4>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {[
+              {
+                pattern: "Opus 90%+",
+                title: "Opus一極集中型",
+                color: "border-l-indigo-500 bg-indigo-50/50",
+                desc: "最高性能モデルのみ使用。品質最重視だがコストが高い。",
+                advice: "単純タスク（ファイル検索・テンプレ修正等）はSonnet/Haikuに切り替えでコスト大幅削減可能",
+              },
+              {
+                pattern: "Sonnet 50%+",
+                title: "Sonnet中心型",
+                color: "border-l-blue-500 bg-blue-50/50",
+                desc: "コスパ重視の使い方。中程度の複雑さのタスクが多い。",
+                advice: "バランスの良い使い方。複雑なアーキテクチャ設計はOpusに切り替えると精度UP",
+              },
+              {
+                pattern: "Haiku 30%+",
+                title: "コスト最適化型",
+                color: "border-l-cyan-500 bg-cyan-50/50",
+                desc: "コスト意識が高く、タスクに応じてモデルを使い分けている。",
+                advice: "理想的なモデル使い分け。Haikuの回答品質に問題がなければ続けてOK",
+              },
+              {
+                pattern: "均等分布",
+                title: "バランス型",
+                color: "border-l-emerald-500 bg-emerald-50/50",
+                desc: "各モデルを状況に応じて切り替えている。適応力が高い。",
+                advice: "タスク複雑度に合ったモデル選択ができている。チームのお手本パターン",
+              },
+            ].map((item) => (
+              <div key={item.pattern} className={`rounded-xl border-l-4 border border-gray-100 p-4 ${item.color}`}>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[10px] font-bold text-gray-500 bg-white px-1.5 py-0.5 rounded">{item.pattern}</span>
+                </div>
+                <h5 className="text-xs font-bold text-gray-800 mb-1">{item.title}</h5>
+                <p className="text-[11px] text-gray-600 leading-relaxed mb-1.5">{item.desc}</p>
+                <p className="text-[10px] text-gray-500"><span className="font-semibold">Advice:</span> {item.advice}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Tool category patterns */}
+        <div className="bg-white rounded-xl border border-gray-100 p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center">
+              <PieChart className="w-4 h-4 text-teal-600" />
+            </div>
+            <h4 className="text-sm font-bold text-gray-900">ツールカテゴリ分布の傾向</h4>
+          </div>
+          <p className="text-xs text-gray-500 mb-3">個人詳細ページの円グラフの分布パターンから、利用スタイルが読み取れます。</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {[
+              {
+                title: "Bash偏重型",
+                icon: <Terminal className="w-4 h-4 text-gray-600" />,
+                bg: "bg-gray-50",
+                pattern: "Bash 50%以上",
+                desc: "ターミナル操作中心。ビルド・テスト・Git操作が多い開発者タイプ。",
+                tips: "エディタ系ツール（Read/Edit/Write）も活用すると対話内で完結できるタスクが増える",
+              },
+              {
+                title: "MCP偏重型",
+                icon: <Plug className="w-4 h-4 text-cyan-600" />,
+                bg: "bg-cyan-50",
+                pattern: "MCP 40%以上",
+                desc: "外部サービス連携が中心。情報収集・レポート・通知系の業務が多い。",
+                tips: "連携先のAPI制限に注意。バッチ処理やキャッシュ活用でMCP呼び出しを最適化",
+              },
+              {
+                title: "Subagent偏重型",
+                icon: <Brain className="w-4 h-4 text-violet-600" />,
+                bg: "bg-violet-50",
+                pattern: "Subagent 30%以上",
+                desc: "複雑なリサーチやプランニングが多い。戦略的な使い方。",
+                tips: "Exploreが多い→調査系、Planが多い→設計系、general-purposeが多い→並列実行型",
+              },
+              {
+                title: "Read/Edit偏重型",
+                icon: <BookOpen className="w-4 h-4 text-emerald-600" />,
+                bg: "bg-emerald-50",
+                pattern: "ファイル操作 50%以上",
+                desc: "コードの読み書きが中心。実装タスクに集中している開発者タイプ。",
+                tips: "Grepも活用すると大規模コードベースの検索効率が大幅に上がる",
+              },
+              {
+                title: "バランス型",
+                icon: <Gauge className="w-4 h-4 text-blue-600" />,
+                bg: "bg-blue-50",
+                pattern: "偏りなし",
+                desc: "様々なツールを均等に活用。幅広い業務をClaude Codeで処理。",
+                tips: "最も効率的な利用パターン。特定ツールに偏らず柔軟に対応できている",
+              },
+              {
+                title: "メッセージ偏重型",
+                icon: <MessageSquare className="w-4 h-4 text-rose-600" />,
+                bg: "bg-rose-50",
+                pattern: "ツール利用少",
+                desc: "対話（質問→回答）が中心。ツール活用が少なく、ChatGPT的な使い方。",
+                tips: "Claude Codeの真価はツール連携。Read/Edit/Bashの活用を促すと生産性が大幅向上",
+              },
+            ].map((item) => (
+              <div key={item.title} className={`rounded-xl p-4 ${item.bg} border border-transparent hover:border-gray-200 transition-colors`}>
+                <div className="flex items-center gap-2 mb-2">
+                  {item.icon}
+                  <h5 className="text-xs font-bold text-gray-800">{item.title}</h5>
+                </div>
+                <span className="inline-block text-[9px] font-semibold text-gray-500 bg-white/80 px-1.5 py-0.5 rounded mb-1.5">{item.pattern}</span>
+                <p className="text-[11px] text-gray-600 leading-relaxed mb-1.5">{item.desc}</p>
+                <div className="bg-white/60 rounded px-2 py-1.5">
+                  <p className="text-[10px] text-gray-500"><span className="font-semibold">Tips:</span> {item.tips}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Hourly patterns */}
+        <div className="bg-white rounded-xl border border-gray-100 p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center">
+              <Clock className="w-4 h-4 text-orange-600" />
+            </div>
+            <h4 className="text-sm font-bold text-gray-900">時間帯別パターンの傾向</h4>
+          </div>
+          <p className="text-xs text-gray-500 mb-3">個人詳細ページの時間帯別ヒートマップから、働き方のパターンが見えます。</p>
+          <div className="space-y-2">
+            {[
+              { pattern: "9〜18時に集中", label: "ビジネスタイム型", color: "bg-emerald-50 text-emerald-700 border-emerald-200", desc: "標準的な業務時間内に利用。健全なワークスタイル。", insight: "安定した利用パターン。このリズムを維持できると生産性が最も高い" },
+              { pattern: "早朝（5〜8時）に集中", label: "アーリーバード型", color: "bg-blue-50 text-blue-700 border-blue-200", desc: "朝の集中時間にClaude Codeを活用。計画的なタスク処理。", insight: "朝の生産性が高い人に多いパターン。タスクの優先順位が明確な傾向" },
+              { pattern: "深夜（22〜3時）に集中", label: "ナイトオウル型", color: "bg-amber-50 text-amber-700 border-amber-200", desc: "深夜に利用が集中。締め切り前の追い込みや、個人の作業時間帯の可能性。", insight: "慢性的なら働き方の見直しを検討。スポットなら締め切り対応の可能性" },
+              { pattern: "まんべんなく分散", label: "オールタイム型", color: "bg-purple-50 text-purple-700 border-purple-200", desc: "時間帯に偏りがない。常にClaude Codeを傍らに置いて業務している。", insight: "Claude Codeが日常ツールとして定着している。業務効率化の成功パターン" },
+              { pattern: "特定の数時間のみ", label: "スポット利用型", color: "bg-gray-100 text-gray-600 border-gray-200", desc: "限定的な時間帯のみ使用。特定タスクの時だけ起動している。", insight: "Claude Codeの用途が限定的。他の業務にも活用できないか検討の余地あり" },
+            ].map((item) => (
+              <div key={item.pattern} className={`rounded-lg border px-4 py-3 ${item.color}`}>
+                <div className="flex items-center gap-3 mb-1">
+                  <span className="text-xs font-bold">{item.pattern}</span>
+                  <span className="text-[10px] font-semibold uppercase tracking-wider opacity-75">{item.label}</span>
+                </div>
+                <p className="text-[11px] leading-relaxed opacity-90 mb-1">{item.desc}</p>
+                <p className="text-[10px] opacity-70"><span className="font-semibold">Insight:</span> {item.insight}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Permission mode patterns */}
+        <div className="bg-white rounded-xl border border-gray-100 p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-pink-50 flex items-center justify-center">
+              <Shield className="w-4 h-4 text-pink-600" />
+            </div>
+            <h4 className="text-sm font-bold text-gray-900">パーミッションモードの傾向</h4>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {[
+              {
+                mode: "default 主体",
+                color: "border-l-gray-400 bg-gray-50",
+                desc: "標準モード。毎回ツール実行の許可を確認。慎重だが安全。",
+                advice: "信頼できるタスクはacceptEditsに切り替えると操作スピードが大幅UP",
+              },
+              {
+                mode: "acceptEdits 主体",
+                color: "border-l-blue-400 bg-blue-50/50",
+                desc: "ファイル編集を自動許可。コーディング作業の効率を重視。",
+                advice: "最も実用的な設定。本番環境に影響するファイルは注意が必要",
+              },
+              {
+                mode: "plan モード多用",
+                color: "border-l-violet-400 bg-violet-50/50",
+                desc: "計画モードを頻繁に使用。実装前に計画をレビューする慎重派。",
+                advice: "品質重視の良いパターン。大規模変更時は特に有効",
+              },
+              {
+                mode: "bypassPermissions",
+                color: "border-l-amber-400 bg-amber-50/50",
+                desc: "全権限をバイパス。最速だが操作リスクが最も高い。",
+                advice: "経験豊富なユーザー向け。本番環境では非推奨。開発環境限定で使うべき",
+              },
+            ].map((item) => (
+              <div key={item.mode} className={`rounded-xl border-l-4 border border-gray-100 p-4 ${item.color}`}>
+                <h5 className="text-xs font-bold text-gray-800 mb-1">{item.mode}</h5>
+                <p className="text-[11px] text-gray-600 leading-relaxed mb-1.5">{item.desc}</p>
+                <p className="text-[10px] text-gray-500"><span className="font-semibold">Advice:</span> {item.advice}</p>
+              </div>
+            ))}
           </div>
         </div>
       </div>
